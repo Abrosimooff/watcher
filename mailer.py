@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 import os
 import smtplib
 import base64
@@ -8,6 +13,7 @@ from settings import WATCHER_EMAIL, WATCHER_PASSWORD, SMTP_IP, SMTP_PORT
 from jinja2 import Template
 from settings import HOME_PATH
 
+
 class Mailer:
     """ Отпарвка email """
 
@@ -16,10 +22,11 @@ class Mailer:
 
     @staticmethod
     def _send(to_email, message_string):
-        """ Отпарвить сформированное email-сообщение """
+        """ Отправить сформированное email-сообщение """
         server = smtplib.SMTP_SSL(SMTP_IP, SMTP_PORT)
         server.ehlo()
         server.login(WATCHER_EMAIL, WATCHER_PASSWORD)
+        print u'send to', to_email
         server.sendmail(WATCHER_EMAIL, to_email, message_string)
         server.close()
 
@@ -27,7 +34,7 @@ class Mailer:
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = WATCHER_EMAIL
-        msg['To'] = to_email
+        msg['To'] = ', '.join(to_email) if isinstance(to_email, list) else to_email
 
         html = open(os.path.join(HOME_PATH, template_path)).read()
         template = Template(html.decode('utf8'))

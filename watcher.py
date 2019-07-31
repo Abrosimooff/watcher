@@ -16,22 +16,12 @@ from django.utils.functional import cached_property
 
 from mailer import Mailer
 from settings import HOME_PATH
+from settings import RECIEVER_EMAIL_LIST, AUTH_DATA
 
 
 class Doctor:
-    auth_data = {
-        u"id_hospital": u"bece99bb-9d2a-49f9-bded-8c9b56acc773",
-        u"surname": u"Абросимова",
-        u"name": u"Арина",
-        u"birthday": u"2019-04-29",
-        u"insurance_policy": 4295089770000080,
-        u"passport": None,
-        u"phone": u"",
-    }
     DOCTOR_LIST_PATH = os.path.join(HOME_PATH, 'doctor_list.json')
     WATCH_LIST_PATH = os.path.join(HOME_PATH, 'watch_list.json')
-    from_email = u'abrosimooff@yandex.ru'
-    from_pswd = u'd343h3k0'
     session = None
     session_data = {}
     authorized = False
@@ -97,7 +87,7 @@ class Doctor:
         if 'session_id' in self.session_data:
             return
 
-        response = self.session.post('https://vrach42.ru/v1/patients/state/check', json=self.auth_data)  # авторизация
+        response = self.session.post('https://vrach42.ru/v1/patients/state/check', json=AUTH_DATA)  # авторизация
         response = response.json()
         if 'session_id' in response:
             self.session_data = response  # lname, fname, area, session_id
@@ -148,10 +138,11 @@ class Doctor:
         """ Отправить весь список докторов на почту """
         if doctor_list:
             context = dict(doctor_list=doctor_list)
-            Mailer().send_html(u'abrosimooff@gmail.com', u'Обстановка на "Врач42"', context, 'template.jinja2')
+            Mailer().send_html(RECIEVER_EMAIL_LIST, u'Обстановка на "Врач42"', context, 'template.jinja2')
 
     def one_loop(self):
         """ Один цикл работы программы """
+        print 'loop', datetime.datetime.now()
         self.send_doctor_list_to_email(self.watch_doctor_list)
         print 'ok.'
 
