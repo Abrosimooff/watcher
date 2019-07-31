@@ -16,12 +16,11 @@ from django.utils.functional import cached_property
 
 from mailer import Mailer
 from settings import HOME_PATH
-from settings import RECIEVER_EMAIL_LIST, AUTH_DATA
+from settings import RECIEVER_EMAIL_LIST, AUTH_DATA, WATCH_LIST
 
 
 class Doctor:
     DOCTOR_LIST_PATH = os.path.join(HOME_PATH, 'doctor_list.json')
-    WATCH_LIST_PATH = os.path.join(HOME_PATH, 'watch_list.json')
     session = None
     session_data = {}
     authorized = False
@@ -55,11 +54,7 @@ class Doctor:
 
     def get_watch_doctor_list(self):
         """ список докторов, за которыми следим """
-        if os.path.exists(self.WATCH_LIST_PATH):
-            with open(self.WATCH_LIST_PATH, "r") as read_file:
-                watch = json.load(read_file)
-                return watch['id_doctor']
-        return []
+        return WATCH_LIST['id_doctor'] or []
 
     def get_tickets(self, doctor_item):
         """ Получить записи к врачу"""

@@ -2,5 +2,5 @@
 settings.py
 /venv
 /.idea
+/data
 doctor_list.json
-watch_list.json
