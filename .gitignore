@@ -1,0 +1,6 @@
+.gitignore
+settings.py
+/venv
+/.idea
+doctor_list.json
+watch_list.json
