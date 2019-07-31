@@ -64,6 +64,7 @@ class Doctor:
             with open(self.WATCH_LIST_PATH, "r") as read_file:
                 watch = json.load(read_file)
                 return watch['id_doctor']
+        return []
 
     def get_tickets(self, doctor_item):
         """ Получить записи к врачу"""
