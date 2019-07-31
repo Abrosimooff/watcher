@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-
+import os
 import smtplib
 import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from settings import WATCHER_EMAIL, WATCHER_PASSWORD, SMTP_IP, SMTP_PORT
 from jinja2 import Template
-
+from settings import HOME_PATH
 
 class Mailer:
     """ Отпарвка email """
@@ -29,7 +29,7 @@ class Mailer:
         msg['From'] = WATCHER_EMAIL
         msg['To'] = to_email
 
-        html = open(template_path).read()
+        html = open(os.path.join(HOME_PATH, template_path)).read()
         template = Template(html.decode('utf8'))
         html = template.render(**context)
 

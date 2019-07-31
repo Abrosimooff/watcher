@@ -10,8 +10,7 @@ import requests
 from django.utils.functional import cached_property
 
 from mailer import Mailer
-
-HOME_PATH = os.path.join(os.path.expanduser("~"), "work", "watcher")
+from settings import HOME_PATH
 
 
 class Doctor:
