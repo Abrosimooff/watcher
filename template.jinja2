@@ -1,0 +1,24 @@
+<html>
+<head></head>
+<body>
+{% for doctor in doctor_list %}
+    <div style="margin-bottom: 20px; padding: 20px; border-radius: 5px; color:#333; background-color: rgba(61,145,204,0.075)">
+        <div>{{ doctor.lname }}  {{ doctor.fname }} {{ doctor.mname }} &mdash; <span style="color: rgb(61, 145, 204)">{{ doctor.specialty_name }}</span>:</div>
+        {% if doctor.first_free_dt %}
+            <div>Ближайшая свободная дата: {{ doctor.first_free_dt }}</div>
+            <div>Талонов: {{ doctor.tickets_cnt }}</div>
+            {% for date, ticket_list in doctor.opened_tickets.items() %}
+                <div style="padding: 0px 10px; margin: 15px 0px; border-left: 3px solid #cecece">
+                    <div style="margin: 10px; color: #333"><b>{{ date }}</b></div>
+                    {% for t in ticket_list %}
+                        <span style="display:inline-block; width: 45px; text-align: center; color: #fff; border-radius: 2px; background-color: rgb(61, 145, 204); padding: 5px; margin:7px 3px;">{{ t.value[:5] }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div><b>Нет свободных дат</b></div>
+        {% endif %}
+    </div>
+{% endfor %}
+</body>
+</html>
