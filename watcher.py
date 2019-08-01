@@ -7,7 +7,7 @@ import sys
 import time
 import os
 
-from settings import HOME_PATH, RECIEVER_EMAIL_LIST, WATCH_DATA
+from settings import HOME_PATH, WATCH_DATA
 from django.utils.functional import cached_property
 from mailer import Mailer
 
@@ -22,10 +22,12 @@ class Doctor:
     authorized = False
     watch_doctor_ids = []
     auth_data = {}
+    email_list = []
 
     def __init__(self, watch_item):
         self.auth_data = watch_item['auth']
         self.watch_doctor_ids = watch_item['watch_doctor_ids']
+        self.email_list = watch_item['email_list']
         self.session = requests.session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -42,7 +44,7 @@ class Doctor:
     def watch_doctor_list(self):
         """ Данные о врачах, которые нам важны """
         if self.watch_doctor_ids:
-            watch_doctor_list = filter(lambda x: x['id_doctor'] in self.watch_doctor_ids, self.doctor_list)
+            watch_doctor_list = filter(lambda x: int(x['id_doctor']) in self.watch_doctor_ids, self.doctor_list)
             for doctor in watch_doctor_list:
                 doctor['tickets'] = self.get_tickets(doctor)
                 doctor['opened_tickets'] = {}  # Открытые талоны для записи
@@ -100,13 +102,13 @@ class Doctor:
     def doctor_list(self):
         """ получить список врачей """
 
-        # Если есть инфа в файле и она актуальна, то берём оттуда
-        if os.path.exists(self.DOCTOR_LIST_PATH):
-            timestamp = os.path.getmtime(self.DOCTOR_LIST_PATH)
-            create_time = datetime.datetime.fromtimestamp(timestamp)
-            if self.is_actual(create_time):
-                with open(self.DOCTOR_LIST_PATH, "r") as read_file:
-                    return json.load(read_file)
+        # Если есть инфа в файле и она актуальна, то берём оттуда todo: накаждую поликлинику нужно отдельно
+        # if os.path.exists(self.DOCTOR_LIST_PATH):
+        #     timestamp = os.path.getmtime(self.DOCTOR_LIST_PATH)
+        #     create_time = datetime.datetime.fromtimestamp(timestamp)
+        #     if self.is_actual(create_time):
+        #         with open(self.DOCTOR_LIST_PATH, "r") as read_file:
+        #             return json.load(read_file)
 
         # Берём с сайта данные
         self.authorize()
@@ -114,7 +116,8 @@ class Doctor:
             response = self.session.get('https://vrach42.ru/v1/doctors')
             doctor_list = response.json()
             if isinstance(doctor_list, list):
-                self.save_doctor_list(doctor_list)
+                print u'Список врачей получен'
+                # self.save_doctor_list(doctor_list)
                 return doctor_list
         else:
             print u'Warning: Мы не авторизовались и список врачей пуст'
@@ -129,8 +132,8 @@ class Doctor:
     def send_doctor_list_to_email(self, doctor_list):
         """ Отправить весь список докторов на почту """
         if doctor_list:
-            context = dict(doctor_list=doctor_list)
-            Mailer().send_html(RECIEVER_EMAIL_LIST, u'Обстановка на "Врач42"', context, 'template.jinja2')
+            context = dict(doctor_list=doctor_list, auth_data=self.auth_data)
+            Mailer().send_html(self.email_list, u'Обстановка на "Врач42"', context, 'template.jinja2')
 
     def one_loop(self):
         """ Один цикл работы программы """

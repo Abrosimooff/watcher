@@ -1,6 +1,11 @@
 <html>
 <head></head>
 <body>
+<div style="font-size: 16px; margin: 5px 0px; color: rgb(61, 145, 204)"><b>{{ auth_data.name }}</b>, следующие записи доступны для Вас! </div>
+<div style="margin: 5px 0px; ">
+    <div style="color: rgb(61, 145, 204); font-size: 14px;">Можете записаться на сайте <b><a target="_blank" href="https://vrach42.ru">https://vrach42.ru</a></b></div>
+    <div style="color: rgb(61, 145, 204); font-size: 14px;">Номер вашего мед. полиса: <b>{{ auth_data.insurance_policy }}</b></div>
+</div>
 {% for doctor in doctor_list %}
     <div style="margin-bottom: 20px; padding: 20px; border-radius: 5px; color:#333; background-color: rgba(61,145,204,0.075)">
         <div>{{ doctor.lname }}  {{ doctor.fname }} {{ doctor.mname }} &mdash; <span style="color: rgb(61, 145, 204)">{{ doctor.specialty_name }}</span>:</div>
