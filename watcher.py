@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
-
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
+import requests
 import datetime
+import urllib
 import json
+import sys
+import time
 import os
 
-import time
-import urllib
-import requests
-
+from settings import HOME_PATH, RECIEVER_EMAIL_LIST, WATCH_DATA
 from django.utils.functional import cached_property
-
 from mailer import Mailer
-from settings import HOME_PATH
-from settings import RECIEVER_EMAIL_LIST, AUTH_DATA, WATCH_LIST
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 class Doctor:
@@ -24,8 +20,12 @@ class Doctor:
     session = None
     session_data = {}
     authorized = False
+    watch_doctor_ids = []
+    auth_data = {}
 
-    def __init__(self):
+    def __init__(self, watch_item):
+        self.auth_data = watch_item['auth']
+        self.watch_doctor_ids = watch_item['watch_doctor_ids']
         self.session = requests.session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -35,13 +35,14 @@ class Doctor:
             'Origin': 'https://vrach42.ru',
             'Referer': 'https://vrach42.ru/login',
         })
+        print 'init', datetime.datetime.now()
+        print self.auth_data['surname'], self.auth_data['name'], self.auth_data['insurance_policy']
 
     @property
     def watch_doctor_list(self):
         """ Данные о врачах, которые нам важны """
-        doctor_ids = map(str, self.get_watch_doctor_list())
-        if doctor_ids:
-            watch_doctor_list = filter(lambda x: x['id_doctor'] in doctor_ids, self.doctor_list)
+        if self.watch_doctor_ids:
+            watch_doctor_list = filter(lambda x: x['id_doctor'] in self.watch_doctor_ids, self.doctor_list)
             for doctor in watch_doctor_list:
                 doctor['tickets'] = self.get_tickets(doctor)
                 doctor['opened_tickets'] = {}  # Открытые талоны для записи
@@ -51,10 +52,6 @@ class Doctor:
                         doctor['opened_tickets'][ticket['value']] = opened_list
             return watch_doctor_list
         return []
-
-    def get_watch_doctor_list(self):
-        """ список докторов, за которыми следим """
-        return WATCH_LIST['id_doctor'] or []
 
     def get_tickets(self, doctor_item):
         """ Получить записи к врачу"""
@@ -82,7 +79,7 @@ class Doctor:
         if 'session_id' in self.session_data:
             return
 
-        response = self.session.post('https://vrach42.ru/v1/patients/state/check', json=AUTH_DATA)  # авторизация
+        response = self.session.post('https://vrach42.ru/v1/patients/state/check', json=self.auth_data)  # авторизация
         response = response.json()
         if 'session_id' in response:
             self.session_data = response  # lname, fname, area, session_id
@@ -137,9 +134,13 @@ class Doctor:
 
     def one_loop(self):
         """ Один цикл работы программы """
-        print 'loop', datetime.datetime.now()
-        self.send_doctor_list_to_email(self.watch_doctor_list)
-        print 'ok.'
+        open_doctors = filter(lambda x: x['tickets_cnt'], self.watch_doctor_list)  # Докторы, у которых открылась запись
+        if open_doctors:
+            print u'Есть открытые записи.'
+            self.send_doctor_list_to_email(open_doctors)
+        else:
+            print u'Запись к необходимым врачам ещё закрыта.'
+        print 'done.\n'
 
     def loop(self, hours=3):
         """ Запустить цикл каждые hours часов """
@@ -149,6 +150,8 @@ class Doctor:
             time.sleep(seconds)  # in seconds
 
 
-doc = Doctor()
-doc.one_loop()
-# doc.loop(hours=3)
+# Для каждого полиса сделаем проверку
+for watch_item in WATCH_DATA:
+    doc = Doctor(watch_item)
+    doc.one_loop()
+    # doc.loop(hours=3)
